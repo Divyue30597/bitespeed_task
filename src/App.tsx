@@ -1,8 +1,9 @@
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import ReactFlow, {
   Controls,
   MarkerType,
-  MiniMap,
+  ReactFlowInstance,
+  ReactFlowProvider,
   addEdge,
   useEdgesState,
   useNodesState,
@@ -11,8 +12,9 @@ import "reactflow/dist/style.css";
 
 import styles from "./app.module.scss";
 
-import Node from "./components/nodes/Nodes";
-import Button from "./components/button/button";
+import MessageNode from "./components/nodes/Nodes";
+import Sidebar from "./sections/Sidebar/sidebar";
+import Navbar from "./sections/Navbar/navbar";
 
 /**
  * Nodes need to contain a position and label. id should be unique.
@@ -52,12 +54,18 @@ const initialEdges = [
   },
 ];
 
-const nodeTypes = { customNodes: Node };
+const nodeTypes = { customNodes: MessageNode };
+
+let id = 0;
+const getId = () => `node_${id++}`;
 
 export default function App() {
   // For adding interactivity to the graph
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance | null>(null);
+  const reactFlowWrapper = useRef(null);
 
   const onConnect = useCallback(
     // @ts-ignore
@@ -65,14 +73,42 @@ export default function App() {
     [setEdges]
   );
 
+  const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onDrop = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+
+      const type = event.dataTransfer.getData("application/reactflow");
+      if (typeof type === "undefined" || !type) {
+        return;
+      }
+
+      const position = reactFlowInstance?.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      const newNode = {
+        id: getId(),
+        type,
+        position,
+        data: { label: `${type} node` },
+      };
+
+      setNodes((nds) => nds.concat(newNode));
+    },
+    [reactFlowInstance]
+  );
+  console.log(edges);
+
   return (
     <div className={styles.app}>
-      <div className={styles.navbar}>
-        <Button type="button" className={styles.btn}>
-          Save Changes
-        </Button>
-      </div>
-      <div className={styles.container}>
+      <Navbar />
+      <div className={styles.container} ref={reactFlowWrapper}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -80,13 +116,14 @@ export default function App() {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          onInit={setReactFlowInstance}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
         >
           <Controls />
         </ReactFlow>
       </div>
-      <div className={styles.sidebar}>
-        <h1>Sidebar</h1>
-      </div>
+      <Sidebar />
     </div>
   );
 }

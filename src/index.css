@@ -20,10 +20,6 @@
   --primary-color: #b0f1e3;
 }
 
-html,
-body {
-}
-
 .flex_center {
   display: flex;
   align-items: center;
