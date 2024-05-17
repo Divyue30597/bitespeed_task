@@ -4,11 +4,12 @@
   padding: 0.8rem 1.6rem;
 
   .btn_node {
-    padding: 2rem;
+    padding: 2rem 4rem;
     border: 0.2rem solid;
     border-radius: 0.8rem;
-    width: 50%;
+    width: fit-content;
     cursor: grab;
+    font-size: 1.4rem;
 
     justify-content: center;
     flex-direction: column;
@@ -18,5 +19,41 @@
       width: 6rem;
       margin-bottom: 1.2rem;
     }
+  }
+
+  .header {
+    padding: 1.2rem 0rem;
+    font-size: 2rem;
+    font-weight: 600;
+    gap: 1.2rem;
+    border-bottom: 0.2rem solid #e1e1e1;
+
+    & > button {
+      background-color: transparent;
+      border: none;
+    }
+
+    & > button > img {
+      height: 2.4rem;
+      aspect-ratio: 1;
+      cursor: pointer;
+    }
+  }
+
+  .input {
+    // text-align: left;
+    font-size: 1.8rem;
+    align-items: start;
+    margin-top: 1.2rem;
+
+    & > textarea {
+      width: 100%;
+      padding: 1.2rem;
+      margin-top: 1.2rem;
+      font-size: 1.8rem;
+    }
+
+    flex-direction: column;
+    justify-content: start;
   }
 }

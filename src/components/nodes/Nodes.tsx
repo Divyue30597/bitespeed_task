@@ -1,4 +1,4 @@
-import { Handle, Position } from "reactflow";
+import { Handle, NodeProps, Position } from "reactflow";
 
 import styles from "./styles.module.scss";
 import whatsapp from "/whatsapp.svg";
@@ -8,8 +8,7 @@ import message from "/message.svg";
  * Creating a custom node, it will take in a target and a source.
  * @returns
  */
-
-export default function MessageNode() {
+export default function MessageNode({ data }: NodeProps) {
   return (
     <div className={styles.node_style}>
       <div className={`${styles.header} flex_center`}>
@@ -20,7 +19,7 @@ export default function MessageNode() {
         <img src={whatsapp} alt="Whatsapp Image" />
       </div>
       <div className={styles.body}>
-        <p>Sample Text</p>
+        <p>{data.value}</p>
       </div>
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />

@@ -15,68 +15,21 @@ import styles from "./app.module.scss";
 import MessageNode from "./components/nodes/Nodes";
 import Sidebar from "./sections/Sidebar/sidebar";
 import Navbar from "./sections/Navbar/navbar";
-
-/**
- * Nodes need to contain a position and label. id should be unique.
- */
-const initialNodes = [
-  {
-    id: "1",
-    position: { x: 500, y: 500 },
-    data: { label: "Node 1" },
-    type: "customNodes",
-  },
-  {
-    id: "2",
-    position: { x: 500, y: 600 },
-    data: { label: "Node 2" },
-    type: "customNodes",
-  },
-];
-
-/**
- * An edge needs a target (node id) and a source (node id)
- */
-const initialEdges = [
-  {
-    id: "e1-2",
-    source: "1",
-    target: "2",
-    label: "example",
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      width: 10,
-      height: 10,
-    },
-    style: {
-      strokeWidth: 2,
-    },
-  },
-];
+import useAppState from "./hooks/useAppState";
 
 const nodeTypes = { customNodes: MessageNode };
 
 let id = 0;
-const getId = () => `node_${id++}`;
+const getId = () => `node_${++id}`;
 
 export default function App() {
   // For adding interactivity to the graph
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance | null>(null);
   const reactFlowWrapper = useRef(null);
-
-  const onConnect = useCallback(
-    // @ts-ignore
-    (params) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  );
-
-  const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  }, []);
+  const { value, setIsDragging } = useAppState();
 
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
@@ -95,35 +48,73 @@ export default function App() {
       const newNode = {
         id: getId(),
         type,
-        position,
-        data: { label: `${type} node` },
+        position: position!,
+        data: { id: `node_${id}`, label: `${type} node`, value: value },
       };
-
+      console.log(id);
       setNodes((nds) => nds.concat(newNode));
+      setIsDragging(true);
     },
     [reactFlowInstance]
   );
-  console.log(edges);
+
+  const updateNodeMessage = (id: string, data: string) => {
+    const newNodes = nodes.map((node) => {
+      if (node.id === id) {
+        node.data = { ...node.data, value: data };
+      }
+
+      return node;
+    });
+
+    setNodes(newNodes);
+  };
+
+  const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onConnect = useCallback(
+    // @ts-ignore
+    (connection) => {
+      const edge = {
+        ...connection,
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 15,
+          height: 15,
+        },
+        style: {
+          strokeWidth: 2,
+        },
+      };
+      setEdges((eds) => addEdge(edge, eds));
+    },
+    [setEdges]
+  );
 
   return (
-    <div className={styles.app}>
-      <Navbar />
-      <div className={styles.container} ref={reactFlowWrapper}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          onInit={setReactFlowInstance}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-        >
-          <Controls />
-        </ReactFlow>
+    <ReactFlowProvider>
+      <div className={styles.app}>
+        <Navbar />
+        <div className={styles.container} ref={reactFlowWrapper}>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            onInit={setReactFlowInstance}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+          >
+            <Controls />
+          </ReactFlow>
+        </div>
+        <Sidebar id={`node_${id}`} updateNodeMessage={updateNodeMessage} />
       </div>
-      <Sidebar />
-    </div>
+    </ReactFlowProvider>
   );
 }
