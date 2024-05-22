@@ -1,5 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
-
 import styles from "./styles.module.scss";
 import Button from "../../components/button/button";
 import { useEdges, useNodes, useReactFlow } from "reactflow";
