@@ -8,9 +8,9 @@ import message from "/message.svg";
  * Creating a custom node, it will take in a target and a source.
  * @returns
  */
-export default function MessageNode({ data }: NodeProps) {
+export default function MessageNode({ data, selected }: NodeProps) {
   return (
-    <div className={styles.node_style}>
+    <div className={`${styles.node_style} ${selected ? styles.active : ""}`}>
       <div className={`${styles.header} flex_center`}>
         <div className={`${styles.sub_heading} flex_center`}>
           <img src={message} alt="Whatsapp Image" />
@@ -19,7 +19,7 @@ export default function MessageNode({ data }: NodeProps) {
         <img src={whatsapp} alt="Whatsapp Image" />
       </div>
       <div className={styles.body}>
-        <p>{data.value}</p>
+        <p>{data}</p>
       </div>
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />

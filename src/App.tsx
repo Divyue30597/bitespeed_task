@@ -1,7 +1,7 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import ReactFlow, {
+  Connection,
   Controls,
-  MarkerType,
   ReactFlowInstance,
   ReactFlowProvider,
   addEdge,
@@ -9,33 +9,36 @@ import ReactFlow, {
   useNodesState,
 } from "reactflow";
 import "reactflow/dist/style.css";
+import { v4 as uuidv4 } from "uuid";
 
 import styles from "./app.module.scss";
 
 import MessageNode from "./components/nodes/Nodes";
 import Sidebar from "./sections/Sidebar/sidebar";
 import Navbar from "./sections/Navbar/navbar";
-import useAppState from "./hooks/useAppState";
-
-const nodeTypes = { customNodes: MessageNode };
-
-let id = 0;
-const getId = () => `node_${++id}`;
+import CustomEdge from "./components/customEdges/CustomEdge";
 
 export default function App() {
   // For adding interactivity to the graph
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    JSON.parse(localStorage.getItem("flow")!)?.nodes || []
+  );
+  const [edges, setEdges, onEdgesChange] = useEdgesState(
+    JSON.parse(localStorage.getItem("flow")!)?.edges || []
+  );
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance | null>(null);
+
   const reactFlowWrapper = useRef(null);
-  const { value, setIsDragging } = useAppState();
+
+  const nodeTypes = useMemo(() => ({ customNodes: MessageNode }), []);
+  const edgeTypes = useMemo(() => ({ customEdge: CustomEdge }), []);
 
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
 
-      const type = event.dataTransfer.getData("application/reactflow");
+      const type = event.dataTransfer.getData("reactflow/nodeType");
       if (typeof type === "undefined" || !type) {
         return;
       }
@@ -45,25 +48,24 @@ export default function App() {
         y: event.clientY,
       });
 
+      // Creating a new node everytime we are dragging from the setting panel.
       const newNode = {
-        id: getId(),
-        type,
+        id: uuidv4(),
+        type: type,
         position: position!,
-        data: { id: `node_${id}`, label: `${type} node`, value: value },
+        data: "",
       };
-      console.log(id);
+
       setNodes((nds) => nds.concat(newNode));
-      setIsDragging(true);
     },
-    [reactFlowInstance]
+    [reactFlowInstance, setNodes]
   );
 
-  const updateNodeMessage = (id: string, data: string) => {
+  const updateNodeMessage = (data: string) => {
     const newNodes = nodes.map((node) => {
-      if (node.id === id) {
-        node.data = { ...node.data, value: data };
+      if (node.selected) {
+        node.data = data;
       }
-
       return node;
     });
 
@@ -76,23 +78,19 @@ export default function App() {
   }, []);
 
   const onConnect = useCallback(
-    // @ts-ignore
-    (connection) => {
-      const edge = {
-        ...connection,
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          width: 15,
-          height: 15,
-        },
-        style: {
-          strokeWidth: 2,
-        },
-      };
-      setEdges((eds) => addEdge(edge, eds));
+    (connection: Connection) => {
+      const newEdge = { ...connection, type: "customEdge" };
+      setEdges((eds) => {
+        return addEdge(newEdge, eds);
+      });
     },
     [setEdges]
   );
+
+  const isValidConnection = (connection: Connection) => {
+    // check if starting source already contains has an edge
+    return !edges.filter((edge) => edge.source === connection.source).length;
+  };
 
   return (
     <ReactFlowProvider>
@@ -104,16 +102,20 @@ export default function App() {
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            onConnect={onConnect}
             onInit={setReactFlowInstance}
             onDrop={onDrop}
             onDragOver={onDragOver}
+            isValidConnection={isValidConnection}
+            // onConnectStart={onConnectStart}
+            // selectNodesOnDrag={false}
           >
             <Controls />
           </ReactFlow>
         </div>
-        <Sidebar id={`node_${id}`} updateNodeMessage={updateNodeMessage} />
+        <Sidebar updateNodeMessage={updateNodeMessage} />
       </div>
     </ReactFlowProvider>
   );

@@ -1,34 +1,41 @@
 import left_arrow from "/left-arrow.svg";
 import styles from "./styles.module.scss";
 import message from "/message.svg";
-import useAppState from "../../hooks/useAppState";
-import { useReactFlow, useStoreApi } from "reactflow";
+import { useNodes } from "reactflow";
+import { useEffect, useState } from "react";
 
 export default function Sidebar({
-  id,
   updateNodeMessage,
 }: {
-  id: string;
-  updateNodeMessage: (id: string, data: string) => void;
+  updateNodeMessage: (data: string) => void;
 }) {
-  // One context
-  const { isDragging, setIsDragging } = useAppState();
-  const store = useStoreApi();
+  const node = useNodes().filter((node) => {
+    return node.selected;
+  });
+  const [isSelected, setIsSelected] = useState(node[0]?.selected);
+  const [inputVal, setInputVal] = useState(node[0]?.data as string);
 
-  // const nodes = store.getState().getNodes();
-  console.log(store.getState());
+  useEffect(() => {
+    if (node.length) {
+      setIsSelected(node[0]?.selected!);
+      setInputVal(node[0]?.data as string);
+    } else {
+      setIsSelected(false);
+    }
+  }, [node, setIsSelected]);
 
   function handleOnDragStart(
     event: React.DragEvent<HTMLDivElement>,
     nodeType: string
   ) {
-    event.dataTransfer.setData("application/reactflow", nodeType);
+    event.dataTransfer.setData("reactflow/nodeType", nodeType);
     event.dataTransfer.effectAllowed = "move";
+    setInputVal("");
   }
 
   return (
     <div className={styles.sidebar}>
-      {!isDragging ? (
+      {!isSelected ? (
         <div
           className={`${styles.btn_node} flex_center`}
           onDragStart={(event) => handleOnDragStart(event, "customNodes")}
@@ -42,7 +49,9 @@ export default function Sidebar({
           <div className={`${styles.header} flex_center`}>
             <button
               className="flex_center"
-              onClick={() => setIsDragging(false)}
+              onClick={() => {
+                setIsSelected(false);
+              }}
             >
               <img src={left_arrow} alt="Left Arrow" />
             </button>
@@ -54,8 +63,10 @@ export default function Sidebar({
               name="message"
               id="message"
               placeholder="Enter Message..."
+              value={inputVal}
               onChange={(e) => {
-                updateNodeMessage(id, e.target.value);
+                setInputVal(e.target.value);
+                updateNodeMessage(e.target.value);
               }}
               rows={5}
             />

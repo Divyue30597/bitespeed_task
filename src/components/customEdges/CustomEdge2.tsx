@@ -2,7 +2,7 @@ import { BaseEdge, EdgeProps, getBezierPath } from "reactflow";
 
 type CustomEdgeProps = EdgeProps;
 
-export default function CustomEdge({
+export default function CustomEdge2({
   id,
   sourceX,
   sourceY,
@@ -25,7 +25,7 @@ export default function CustomEdge({
     <BaseEdge
       id={id}
       path={edgePath}
-      style={{ strokeWidth: 2, stroke: "#FF0072" }}
+      style={{ strokeWidth: 2, stroke: "#FF0" }}
       markerEnd={markerEnd}
     />
   );

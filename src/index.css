@@ -18,6 +18,8 @@
   height: 100dvh;
 
   --primary-color: #b0f1e3;
+  --danger-color: #fbcccb;
+  --warning-color: #fdff99;
 }
 
 .flex_center {
