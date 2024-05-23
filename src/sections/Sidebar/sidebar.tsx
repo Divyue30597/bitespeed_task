@@ -1,15 +1,15 @@
 import left_arrow from "/left-arrow.svg";
 import styles from "./styles.module.scss";
 import message from "/message.svg";
-import { useNodes } from "reactflow";
+import { useNodes, useReactFlow } from "reactflow";
 import { useEffect, useState } from "react";
 
-export default function Sidebar({
-  updateNodeMessage,
-}: {
-  updateNodeMessage: (data: string) => void;
-}) {
-  const node = useNodes().filter((node) => {
+export default function Sidebar() {
+  const nodes = useNodes();
+  const { setNodes } = useReactFlow();
+
+  // filtering out the selected node.
+  const node = nodes.filter((node) => {
     return node.selected;
   });
   const [isSelected, setIsSelected] = useState(node[0]?.selected);
@@ -32,6 +32,17 @@ export default function Sidebar({
     event.dataTransfer.effectAllowed = "move";
     setInputVal("");
   }
+
+  const updateNodeMessage = (data: string) => {
+    const newNodes = nodes.map((node) => {
+      if (node.selected) {
+        node.data = data;
+      }
+      return node;
+    });
+
+    setNodes(newNodes);
+  };
 
   return (
     <div className={styles.sidebar}>

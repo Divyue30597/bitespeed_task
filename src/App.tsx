@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import ReactFlow, {
   Connection,
   Controls,
@@ -8,7 +8,6 @@ import ReactFlow, {
   addEdge,
   useEdgesState,
   useNodesState,
-  useReactFlow,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { v4 as uuidv4 } from "uuid";
@@ -29,8 +28,6 @@ export default function App() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(
     JSON.parse(localStorage.getItem("flow")!)?.edges || []
   );
-
-  const reactFlowWrapper = useRef(null);
 
   const nodeTypes = useMemo(() => ({ customNodes: MessageNode }), []);
   const edgeTypes = useMemo(() => ({ customEdge: CustomEdge }), []);
@@ -64,17 +61,6 @@ export default function App() {
     [reactFlowInstance, setNodes]
   );
 
-  const updateNodeMessage = (data: string) => {
-    const newNodes = nodes.map((node) => {
-      if (node.selected) {
-        node.data = data;
-      }
-      return node;
-    });
-
-    setNodes(newNodes);
-  };
-
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
@@ -103,20 +89,18 @@ export default function App() {
     <ReactFlowProvider>
       <div className={styles.app}>
         <Navbar />
-        <div className={styles.container} ref={reactFlowWrapper}>
+        <div className={styles.container}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
-            // registering custom nodes and edges.
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onInit={setReactFlowInstance}
             onConnect={onConnect}
             onDrop={onDrop}
             onDragOver={onDragOver}
-            // Validation for passing
             isValidConnection={isValidConnection}
             selectNodesOnDrag={false}
             fitView={true}
@@ -124,7 +108,7 @@ export default function App() {
             <Controls />
           </ReactFlow>
         </div>
-        <Sidebar updateNodeMessage={updateNodeMessage} />
+        <Sidebar />
       </div>
     </ReactFlowProvider>
   );
