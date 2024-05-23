@@ -25,7 +25,7 @@ export default function CustomEdge({
     <BaseEdge
       id={id}
       path={edgePath}
-      style={{ strokeWidth: 2, stroke: "#FF0072" }}
+      style={{ strokeWidth: 2 }}
       markerEnd={markerEnd}
     />
   );

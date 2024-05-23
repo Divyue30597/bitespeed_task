@@ -22,7 +22,7 @@ export default function Sidebar({
     } else {
       setIsSelected(false);
     }
-  }, [node, setIsSelected]);
+  }, [node]);
 
   function handleOnDragStart(
     event: React.DragEvent<HTMLDivElement>,
